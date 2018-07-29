@@ -1,36 +1,16 @@
-const ddb = require('dynamodb');
-const Joi = require('joi');
+const {dynamo} = require('./../server/db/dynamo.js');
+const {Todo} = require('./../server/models/todo.js');
+const {User} = require('./../server/models/user.js');
 
-ddb.AWS.config.update({region: 'us-east-1', endpoint: 'http://localhost:8000'});
+// dynamo.AWS.config.update({region: 'us-east-1', endpoint: 'http://localhost:8000'});
 
-var Todo = ddb.define('Todo', {
-  hashKey: 'id',
-  timestamps: true,
-  updatedAt: false,
-  schema: {
-    id: ddb.types.uuid(),
-    text: Joi.string().required(),
-    completed: Joi.boolean(),
+dynamo.createTables(function(err) {
+  if (err) {
+    console.log('Error creating tables: ', err);
+  } else {
+    console.log('Tables has been created');
   }
 });
-
-var User = ddb.define('User', {
-  hashKey: 'id',
-  schema: {
-    id: ddb.types.uuid(),
-    email: Joi.string().trim().email().required(),
-    password: Joi.string().required(),
-    tokens: [{access: Joi.string().required(), token: Joi.string().required()}]
-  }
-});
-//
-// ddb.createTables(function(err) {
-//   if (err) {
-//     console.log('Error creating tables: ', err);
-//   } else {
-//     console.log('Tables has been created');
-//   }
-// });
 
 var todo = new Todo({text: 'this is a test 2'});
 todo.save((err) => {

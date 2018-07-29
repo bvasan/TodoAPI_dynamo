@@ -1,6 +1,6 @@
-// require('./config/config');
+require('./config/config');
 
-// const _ = require('lodash');
+const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -28,6 +28,68 @@ app.post('/todos', (req, res) => {
       return res.status(400).send(err);
     };
     res.send(todo);
+  });
+});
+
+app.get('/todos', (req,res) => {
+  Todo.scan().loadAll().exec((err,todos) => {
+    if (err) {
+      return res.status(404).send(err);
+    }
+    res.send(todos);
+  });
+});
+
+app.get('/todos/:id', (req, res) => {
+
+  var id = req.params.id;
+
+  Todo.get({
+    id: id
+  }, (err, todo) => {
+    if (err) {
+      return res.status(400).send();
+    }
+    if (!todo) {
+      return res.status(404).send();
+    }
+    res.send(todo);
+  });
+});
+
+app.delete('/todos/:id', (req, res) => {
+  var id = req.params.id;
+
+  Todo.destroy({id}, {ReturnValues: 'ALL_OLD'}, (err, todo) => {
+    if (err) {
+      return res.status(400).send();
+    }
+    if (!todo) {
+      return res.status(404).send();
+    }
+    res.send(todo.attrs);
+  });
+});
+
+app.patch('/todos/:id', (req, res) => {
+  var body = _.pick(req.body,['text', 'completed']);
+
+  body.id =  req.params.id;
+  if (_.isBoolean(body.completed) && body.completed) {
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completed = false;
+    body.completedAt = null;
+  }
+
+  Todo.update(body, {ReturnValues: "ALL_NEW"}, (err, todo) => {
+    if (err) {
+      return res.status(400).send();
+    }
+    if (!todo) {
+      return res.status(404).send();
+    }
+    res.send(todo.attrs);
   });
 });
 
